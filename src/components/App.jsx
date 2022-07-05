@@ -25,7 +25,7 @@ export default class App extends Component {
     const { query, page } = this.state;
     const { query: prevQuery, page: prevPage } = prevState;
 
-    if (query !== prevQuery) {
+    if (query !== prevQuery && page === prevPage) {
       API.params.page = 1;
       API.params.q = query;
       try {
@@ -44,7 +44,8 @@ export default class App extends Component {
       }
     }
 
-    if (page !== prevPage) {
+
+    if (page !== prevPage && page !== 1) {
       API.params.page = page;
       API.params.q = query;
       try {
@@ -79,7 +80,7 @@ export default class App extends Component {
 
   render() {
     const { data, isLoading, page, pages, showLargePic, picData } = this.state;
-
+  
     return (
       <AppComponent>
         <SearchBar onSubmit={this.setQuery} />
