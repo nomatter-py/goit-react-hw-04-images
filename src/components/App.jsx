@@ -25,37 +25,39 @@ export default class App extends Component {
     const { query, page } = this.state;
     const { query: prevQuery, page: prevPage } = prevState;
 
-    if (query !== prevQuery && page === prevPage) {
-      API.params.page = 1;
+    if (query !== prevQuery || (page !== prevPage && page !== 1)) {
+      API.params.page = query !== prevQuery ? 1 : page;
       API.params.q = query;
       try {
         this.setState({ isLoading: true });
         const data = await API.getData(API.params);
-        this.setState({
-          data: [...data.hits],
-          page: 1,
-          total: data.total,
-          pages: Math.ceil(data.total / API.params.per_page),
-          isLoading: false,
-        });
-      } catch (error) {
-        this.setState({ error: true, isLoading: false });
-        console.log(error);
-      }
-    }
+        const { total, hits } = data;
 
+        const properStructHits = hits.map(({ id, largeImageURL, webformatURL, tags }) => ({
+              id,
+              largeImageURL,
+              webformatURL,
+              tags,
+            }))
 
-    if (page !== prevPage && page !== 1) {
-      API.params.page = page;
-      API.params.q = query;
-      try {
-        this.setState({ isLoading: true });
-        const data = await API.getData(API.params);
-        this.setState(p => ({
-          data: [...p.data, ...data.hits],
-          page: page,
-          isLoading: false,
-        }));
+        if (query !== prevQuery) {
+          this.setState({
+            data: [...properStructHits],
+            page: API.params.page,
+            total: total,
+            pages: Math.ceil(total / API.params.per_page),
+            isLoading: false,
+          });
+        } else {
+          this.setState(p => ({
+            data: [
+              ...p.data,
+              ...properStructHits,
+            ],
+            page: API.params.page,
+            isLoading: false,
+          }));
+        }
       } catch (error) {
         this.setState({ error: true, isLoading: false });
         console.log(error);
@@ -80,11 +82,13 @@ export default class App extends Component {
 
   render() {
     const { data, isLoading, page, pages, showLargePic, picData } = this.state;
-  
+
     return (
       <AppComponent>
         <SearchBar onSubmit={this.setQuery} />
-        <ImageGallery data={data} toggleLargeMode={this.toggleLargeMode} />
+        {data.length > 0 && (
+          <ImageGallery data={data} toggleLargeMode={this.toggleLargeMode} />
+        )}
         {isLoading && <Loader />}
         {data.length > 0 && page < pages && (
           <Button type="button" onClick={this.handleLoadMore}>

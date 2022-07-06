@@ -48,6 +48,7 @@ export const ButtonSearch = styled.button`
 export const FieldStyled = styled(Field)`
   display: inline-block;
   width: 100%;
+  height:100%;
   font: inherit;
   font-size: 20px;
   border: none;
