@@ -9,7 +9,6 @@ import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 
 export default function App() {
- 
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [data, setData] = useState([]);
@@ -20,36 +19,36 @@ export default function App() {
   const [picData, setPicData] = useState({});
 
   useEffect(() => {
+    async function fetchData() {
+      if (!query) return;
+
+      setIsLoading(true);
+      API.params.page = page;
+      API.params.q = query;
+      try {
+        const data = await API.getData(API.params);
+        const { total, hits } = data;
+        console.log(data);
+        const properStructHits = hits.map(
+          ({ id, largeImageURL, webformatURL, tags }) => ({
+            id,
+            largeImageURL,
+            webformatURL,
+            tags,
+          })
+        );
+        setData(state => [...state, ...properStructHits]);
+        setPage(API.params.page);
+        setPages(Math.ceil(total / API.params.per_page));
+      } catch (e) {
+        setError(true);
+        console.log(e);
+      }
+      setIsLoading(false);
+    }
+
     fetchData();
   }, [query, page]);
-
-  const fetchData = async () => {
-    if (!query) return;
-
-    setIsLoading(true);
-    API.params.page = page;
-    API.params.q = query;
-    try {
-      const data = await API.getData(API.params);
-      const { total, hits } = data;
-      console.log(data);
-      const properStructHits = hits.map(
-        ({ id, largeImageURL, webformatURL, tags }) => ({
-          id,
-          largeImageURL,
-          webformatURL,
-          tags,
-        })
-      );
-      setData(state => [...state, ...properStructHits]);
-      setPage(API.params.page);
-      setPages(Math.ceil(total / API.params.per_page));
-    } catch (e) {
-      setError(true);
-      console.log(e);
-    }
-    setIsLoading(false);
-  };
 
   const handleQuery = value => {
     setPage(1);
