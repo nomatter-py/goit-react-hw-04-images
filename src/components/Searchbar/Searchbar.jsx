@@ -1,16 +1,15 @@
-import { Component } from 'react';
 import { SearchBarComponent, FormStyled, ButtonSearch, FieldStyled } from './Searchbar.styled';
 import { Formik } from 'formik';
 import PropTypes from 'prop-types';
 
-export default class SearchBar extends Component {
-  render() {
+const SearchBar = ({handleQuery}) => {
+  
     return (
       <SearchBarComponent>
         <Formik
           initialValues={{ search: '' }}
           onSubmit={(values, actions) => {
-            this.props.onSubmit(values.search);
+            handleQuery(values.search);
             actions.setSubmitting(false);
           }}
         >
@@ -33,10 +32,12 @@ export default class SearchBar extends Component {
         </Formik>
       </SearchBarComponent>
     );
-  }
+  
 }
 
 
 SearchBar.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
+  handleQuery: PropTypes.func.isRequired,
 }
+
+export default SearchBar;

@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 import SearchBar from './Searchbar/Searchbar';
 import * as API from 'services/pixabay-api';
@@ -8,99 +8,83 @@ import { Loader } from './Loader/Loader';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 
-export default class App extends Component {
-  state = {
-    isLoading: false,
-    page: 1,
-    data: [],
-    total: 0,
-    pages: 0,
-    error: '',
-    query: '',
-    showLargePic: false,
-    picData: {},
-  };
+export default function App() {
+ 
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState([]);
+  const [pages, setPages] = useState(0);
+  const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
+  const [showLargePic, setShowLargePic] = useState(false);
+  const [picData, setPicData] = useState({});
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { query, page } = this.state;
-    const { query: prevQuery, page: prevPage } = prevState;
+  useEffect(() => {
+    fetchData();
+  }, [query, page]);
 
-    if (query !== prevQuery || (page !== prevPage && page !== 1)) {
-      API.params.page = query !== prevQuery ? 1 : page;
-      API.params.q = query;
-      try {
-        this.setState({ isLoading: true });
-        const data = await API.getData(API.params);
-        const { total, hits } = data;
+  const fetchData = async () => {
+    if (!query) return;
 
-        const properStructHits = hits.map(({ id, largeImageURL, webformatURL, tags }) => ({
-              id,
-              largeImageURL,
-              webformatURL,
-              tags,
-            }))
-
-        if (query !== prevQuery) {
-          this.setState({
-            data: [...properStructHits],
-            page: API.params.page,
-            total: total,
-            pages: Math.ceil(total / API.params.per_page),
-            isLoading: false,
-          });
-        } else {
-          this.setState(p => ({
-            data: [
-              ...p.data,
-              ...properStructHits,
-            ],
-            page: API.params.page,
-            isLoading: false,
-          }));
-        }
-      } catch (error) {
-        this.setState({ error: true, isLoading: false });
-        console.log(error);
-      }
+    setIsLoading(true);
+    API.params.page = page;
+    API.params.q = query;
+    try {
+      const data = await API.getData(API.params);
+      const { total, hits } = data;
+      console.log(data);
+      const properStructHits = hits.map(
+        ({ id, largeImageURL, webformatURL, tags }) => ({
+          id,
+          largeImageURL,
+          webformatURL,
+          tags,
+        })
+      );
+      setData(state => [...state, ...properStructHits]);
+      setPage(API.params.page);
+      setPages(Math.ceil(total / API.params.per_page));
+    } catch (e) {
+      setError(true);
+      console.log(e);
     }
-  }
-
-  setQuery = value => {
-    this.setState({ query: value });
+    setIsLoading(false);
   };
 
-  toggleLargeMode = picData => {
-    this.setState(({ showLargePic }) => ({
-      showLargePic: !showLargePic,
-      picData,
-    }));
+  const handleQuery = value => {
+    setPage(1);
+    setData([]);
+    setQuery(value);
   };
 
-  handleLoadMore = () => {
-    this.setState(p => ({ page: p.page + 1 }));
+  const toggleLargeMode = picData => {
+    setShowLargePic(state => !state);
+    setPicData(picData);
   };
 
-  render() {
-    const { data, isLoading, page, pages, showLargePic, picData } = this.state;
+  const handleLoadMore = () => {
+    setPage(state => state + 1);
+  };
 
-    return (
-      <AppComponent>
-        <SearchBar onSubmit={this.setQuery} />
-        {data.length > 0 && (
-          <ImageGallery data={data} toggleLargeMode={this.toggleLargeMode} />
-        )}
-        {isLoading && <Loader />}
-        {data.length > 0 && page < pages && (
-          <Button type="button" onClick={this.handleLoadMore}>
-            Load more
-          </Button>
-        )}
-        {showLargePic && (
-          <Modal onClose={this.toggleLargeMode}>
-            <img alt={picData.alt} src={picData.url} />
-          </Modal>
-        )}
-      </AppComponent>
-    );
-  }
+  return (
+    <AppComponent>
+      <SearchBar handleQuery={handleQuery} />
+      {data.length > 0 && (
+        <ImageGallery data={data} toggleLargeMode={toggleLargeMode} />
+      )}
+      {isLoading && <Loader />}
+      {error && <p>Sorry, something went wrong</p>}
+
+      {data.length > 0 && page < pages && (
+        <Button type="button" onClick={handleLoadMore}>
+          Load more
+        </Button>
+      )}
+      {showLargePic && (
+        <Modal onClose={toggleLargeMode}>
+          <img alt={picData.alt} src={picData.url} />
+        </Modal>
+      )}
+    </AppComponent>
+  );
 }

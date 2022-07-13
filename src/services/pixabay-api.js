@@ -26,7 +26,9 @@ export const getData = async params => {
       params,
     });
 
-    return response.data;
+    const data = await response.data
+    return data
+    //return response.data;
   } catch (error) {
     Notiflix.Notify.failure(`Smth went wrong ${error}`);
     throw new Error(`Smth went wrong ${error}`);
