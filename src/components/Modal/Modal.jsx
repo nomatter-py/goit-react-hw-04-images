@@ -1,4 +1,4 @@
-import React, { Component, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Overlay, ModalContent } from './Modal.styled';
 import PropTypes from 'prop-types';
